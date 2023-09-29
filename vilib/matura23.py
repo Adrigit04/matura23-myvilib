@@ -3,5 +3,7 @@ class Matura23Utils(object):
 
     @staticmethod
     def isMatura23Model(model_path=""):
-        return "matura23" in model_path.lower()
-
+        if "matura23" in model_path.lower():
+            return True 
+        else:
+            return False

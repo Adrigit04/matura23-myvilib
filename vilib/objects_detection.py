@@ -47,8 +47,8 @@ def get_output_tensor(interpreter, index):
   tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
   return tensor
 
-# matura23 - added model_path
-def __detect_objects(interpreter, image, threshold, model):
+# matura23 - added model_path 
+def __detect_objects(interpreter, image, threshold, model_path):
   """Returns a list of detection results, each a dictionary of object info."""
   set_input_tensor(interpreter, image)
   interpreter.invoke()
@@ -67,7 +67,7 @@ def __detect_objects(interpreter, image, threshold, model):
   indexCount = 3
 
   from .matura23 import Matura23Utils
-  if Matura23Utils.isMatura23Model(model):
+  if Matura23Utils.isMatura23Model(model_path):
     indexBoxes = 1
     indexClasses = 3
     indexScores = 0
