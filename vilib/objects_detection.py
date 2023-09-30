@@ -66,8 +66,7 @@ def __detect_objects(interpreter, image, threshold, model_path):
   indexScores = 2
   indexCount = 3
 
-  from .matura23 import Matura23Utils
-  if Matura23Utils.isMatura23Model(model_path):
+  if "matura23" in model_path.lower():
     indexBoxes = 1
     indexClasses = 3
     indexScores = 0
