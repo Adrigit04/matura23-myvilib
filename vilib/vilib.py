@@ -300,6 +300,10 @@ class Vilib(object):
     detect_obj_parameter['object_h'] = 0
     detect_obj_parameter['object_t'] = 'None'      # object label
     detect_obj_parameter['object_n'] = 0
+    # Matura23
+    detect_obj_parameter['object_img'] = None 
+    detect_obj_parameter['object_results'] = [] 
+
 
     # detect_switch
     detect_obj_parameter['hdf_flag'] = False
@@ -603,6 +607,7 @@ class Vilib(object):
                     
                     start_time = time.time()
                     img = frame.array
+                    results = [] # definiert als Variable
 
                     img = Vilib.gesture_calibrate(img)
                     img = Vilib.traffic_detect(img)
@@ -612,10 +617,14 @@ class Vilib(object):
                     img = Vilib.qrcode_detect_func(img)
                     # img = Vilib.face_detect_func(img)
                     # img = Vilib.face_recognition_func(img)
-                    img = Vilib.object_detect_fuc(img) 
+                    img, results = Vilib.object_detect_fuc(img) # added results
                     img = Vilib.image_classify_fuc(img)
                     img = Vilib.hands_detect_fuc(img)
                     img = Vilib.pose_detect_fuc(img)
+
+                    # Matura23 eingefügt
+                    Vilib.detect_obj_parameter['object_img'] = img 
+                    Vilib.detect_obj_parameter['object_results'] = results
 
                     # change_camera_setting
                     if Vilib.detect_obj_parameter['change_setting_flag'] == True:
@@ -1417,9 +1426,11 @@ class Vilib(object):
             # matura23 pass threshold
             #img = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels)
             threshold=Vilib.detect_obj_parameter['odf_threshold']
-            img = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels,threshold=threshold) 
+            img, results = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels,threshold=threshold)
+            #Vilib.detect_obj_parameter['object_img'] = img 
+            #Vilib.detect_obj_parameter['object_results'] = results
             # matura23 end  
-        return img   
+        return img, results   
       
 # image classification
     @staticmethod

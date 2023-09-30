@@ -131,9 +131,10 @@ def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,
     results = __detect_objects(interpreter,img,threshold,model)
     # putText
     image = put_text(image,results,labels,width,height)
-    
-  return  image
 
+  # Matura23 - add return results
+  #return image
+  return image, results
 
 # For webcam:
 results = []
