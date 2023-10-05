@@ -306,9 +306,6 @@ class Vilib(object):
     detect_obj_parameter['object_h'] = 0
     detect_obj_parameter['object_t'] = 'None'      # object label
     detect_obj_parameter['object_n'] = 0
-    # Matura23
-    detect_obj_parameter['object_img'] = None 
-    detect_obj_parameter['object_results'] = [] 
 
     # detect_switch
     detect_obj_parameter['hdf_flag'] = False
@@ -614,7 +611,7 @@ class Vilib(object):
                 img = Vilib.qrcode_detect_func(img)
                 # img = Vilib.face_detect_func(img)
                 # img = Vilib.face_recognition_func(img)
-                img, results = Vilib.object_detect_fuc(img) # matura23 - added return results
+                img = Vilib.object_detect_fuc(img) 
                 img = Vilib.image_classify_fuc(img)
                 img = Vilib.hands_detect_fuc(img)
                 img = Vilib.pose_detect_fuc(img)
@@ -1375,11 +1372,8 @@ class Vilib(object):
 
 # objects detection
     @staticmethod
-    def object_detect_switch(flag=False,threshold=0.4):
+    def object_detect_switch(flag=False):
         Vilib.detect_obj_parameter['odf_flag'] = flag
-        # matura23 set threshold
-        Vilib.detect_obj_parameter['odf_threshold'] = threshold
-        # matura23 end
 
     @staticmethod
     def object_detect_set_model(path):
@@ -1400,12 +1394,8 @@ class Vilib(object):
         if Vilib.detect_obj_parameter['odf_flag'] == True:
             # print('detect_objects starting')
             from .objects_detection import detect_objects
-            # matura23 pass threshold, return results
-            #img = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels)
-            threshold=Vilib.detect_obj_parameter['odf_threshold']
-            img, results = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels,threshold=threshold)
-            # matura23 end  
-        return img, results # matura23 - return results
+            img = detect_objects(image=img,model=objects_detection_model,labels=objects_detection_labels)   
+        return img   
       
 # image classification
     @staticmethod

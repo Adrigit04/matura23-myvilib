@@ -48,36 +48,16 @@ def get_output_tensor(interpreter, index):
   return tensor
 
 
-# matura23 - added model_path 
-def __detect_objects(interpreter, image, threshold, model_path=model_path):
+def __detect_objects(interpreter, image, threshold):
   """Returns a list of detection results, each a dictionary of object info."""
   set_input_tensor(interpreter, image)
   interpreter.invoke()
 
-  # matura23
-  #Get all output details
-  #boxes = get_output_tensor(interpreter, 0)
-  #classes = get_output_tensor(interpreter, 1)
-  #scores = get_output_tensor(interpreter, 2)
-  #count = int(get_output_tensor(interpreter, 3))
-
-  # default
-  indexBoxes = 0
-  indexClasses = 1
-  indexScores = 2
-  indexCount = 3
-
-  if "matura23" in model_path.lower():
-    indexBoxes = 1
-    indexClasses = 3
-    indexScores = 0
-    indexCount = 2
-  
-  boxes = get_output_tensor(interpreter, indexBoxes)
-  classes = get_output_tensor(interpreter, indexClasses)
-  scores = get_output_tensor(interpreter, indexScores)
-  count = int(get_output_tensor(interpreter, indexCount))
-  # matura23 end
+  # Get all output details
+  boxes = get_output_tensor(interpreter, 0)
+  classes = get_output_tensor(interpreter, 1)
+  scores = get_output_tensor(interpreter, 2)
+  count = int(get_output_tensor(interpreter, 3))
 
   results = []
   for i in range(count):
@@ -113,16 +93,13 @@ def put_text(img,results,labels_map,width=CAMERA_WIDTH,height=CAMERA_HEIGHT):
 
 # For static images:
 def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,height=CAMERA_HEIGHT,threshold=0.4):
-  # matura23 - define results
-  results = []
-
   # loading model and corresponding label
   if not os.path.exists(model):
     print('incorrect model path ')
-    return image, results # matura23 return results
+    return image
   if not os.path.exists(labels):
     print('incorrect labels path ')
-    return image, results # matura23 return results
+    return image
   labels = load_labels(labels)
   interpreter = Interpreter(model)
   interpreter.allocate_tensors()
@@ -132,16 +109,11 @@ def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,
     # resize
     img = cv2.resize(image,(input_width,input_height))
     # classify
-    # matura23 - add model
-    #results = __detect_objects(interpreter,img,threshold)
-    results = __detect_objects(interpreter,img,threshold,model)
-
+    results = __detect_objects(interpreter,img,threshold)
     # putText
     image = put_text(image,results,labels,width,height)
     
-  # Matura23 - add return results
-  #return image
-  return image, results
+  return  image
 
 
 # For webcam:

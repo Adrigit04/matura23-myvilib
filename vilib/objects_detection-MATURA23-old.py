@@ -47,9 +47,8 @@ def get_output_tensor(interpreter, index):
   tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
   return tensor
 
-
 # matura23 - added model_path 
-def __detect_objects(interpreter, image, threshold, model_path=model_path):
+def __detect_objects(interpreter, image, threshold, model_path):
   """Returns a list of detection results, each a dictionary of object info."""
   set_input_tensor(interpreter, image)
   interpreter.invoke()
@@ -113,16 +112,13 @@ def put_text(img,results,labels_map,width=CAMERA_WIDTH,height=CAMERA_HEIGHT):
 
 # For static images:
 def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,height=CAMERA_HEIGHT,threshold=0.4):
-  # matura23 - define results
-  results = []
-
   # loading model and corresponding label
   if not os.path.exists(model):
     print('incorrect model path ')
-    return image, results # matura23 return results
+    return image
   if not os.path.exists(labels):
     print('incorrect labels path ')
-    return image, results # matura23 return results
+    return image
   labels = load_labels(labels)
   interpreter = Interpreter(model)
   interpreter.allocate_tensors()
@@ -132,17 +128,13 @@ def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,
     # resize
     img = cv2.resize(image,(input_width,input_height))
     # classify
-    # matura23 - add model
-    #results = __detect_objects(interpreter,img,threshold)
     results = __detect_objects(interpreter,img,threshold,model)
-
     # putText
     image = put_text(image,results,labels,width,height)
-    
+
   # Matura23 - add return results
   #return image
   return image, results
-
 
 # For webcam:
 results = []
