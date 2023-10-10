@@ -20,6 +20,14 @@ CAMERA_HEIGHT = 480
 model_path = '/opt/vilib/detect.tflite'
 labels_path = '/opt/vilib/coco_labels.txt'
 
+#model_path = '/opt/vilib/matura23/Run2023-09-30/detect.tflite'
+#model_path = '/opt/vilib/matura23/Run2023-09-30/edgetpu.tflite'
+#labels_path = '/opt/vilib/matura23/labels.txt'
+
+# matura23 - add global variable for edgetpu Interpreter
+device = None
+delegate = None
+
 def load_labels(path):
   """Loads the labels file. Supports files with or without index numbers."""
   with open(path, 'r', encoding='utf-8') as f:
@@ -47,9 +55,8 @@ def get_output_tensor(interpreter, index):
   tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
   return tensor
 
-
 # matura23 - added model_path 
-def __detect_objects(interpreter, image, threshold, model_path=model_path):
+def __detect_objects(interpreter, image, threshold, model_path):
   """Returns a list of detection results, each a dictionary of object info."""
   set_input_tensor(interpreter, image)
   interpreter.invoke()
@@ -113,18 +120,47 @@ def put_text(img,results,labels_map,width=CAMERA_WIDTH,height=CAMERA_HEIGHT):
 
 # For static images:
 def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,height=CAMERA_HEIGHT,threshold=0.4):
-  # matura23 - define results
-  results = []
-
   # loading model and corresponding label
   if not os.path.exists(model):
     print('incorrect model path ')
-    return image, results # matura23 return results
+    return image
   if not os.path.exists(labels):
     print('incorrect labels path ')
-    return image, results # matura23 return results
+    return image
   labels = load_labels(labels)
-  interpreter = Interpreter(model)
+
+  # ##################################################
+  # matura23 - tflite Interpreter für edgetpu models
+  # ##################################################
+  from pycoral.utils import edgetpu
+  interpreter = None
+  # wir instanzieren einen tflite Interpreter für edgetpu Models
+  # falls im Pfad oder im Namen des Models der String "edgetpu" 
+  # gefunden wird 
+  if ("edgetpu" in model):
+    try:
+        # wir verwenden hier die oben definierten globalen Variablen 
+        # damit die Werte auch ausserhalb dieser Funktion zugewiesen
+        # sind
+        global device
+        global delegate
+
+        edgtpuInterpreter = edgetpu.make_interpreter(model, device=device, delegate=delegate)
+        if delegate is None and len(edgtpuInterpreter._delegates) > 0:
+          delegate = edgtpuInterpreter._delegates[0]
+        #interpreter.allocate_tensors() # allocate_tensors() wird weiter unten aufgerufen
+        interpreter = edgtpuInterpreter
+
+    except Exception as ex:
+      print ("error creating delegate for edgetpu", ex)
+
+  else:
+    # falls nicht edgetpu, instanzieren wir einen "normalen" 
+    # tflite Interpreter
+    interpreter = Interpreter(model)
+  # ##################################################
+    
+  #interpreter = Interpreter(model)
   interpreter.allocate_tensors()
   _, input_height, input_width, _ = interpreter.get_input_details()[0]['shape']  
 
@@ -132,17 +168,13 @@ def detect_objects(image,model=model_path,labels=labels_path,width=CAMERA_WIDTH,
     # resize
     img = cv2.resize(image,(input_width,input_height))
     # classify
-    # matura23 - add model
-    #results = __detect_objects(interpreter,img,threshold)
     results = __detect_objects(interpreter,img,threshold,model)
-
     # putText
     image = put_text(image,results,labels,width,height)
-    
+
   # Matura23 - add return results
   #return image
   return image, results
-
 
 # For webcam:
 results = []
@@ -221,7 +253,40 @@ def main():
 
   # loading model and corresponding label
   labels = load_labels(args.labels)
-  interpreter = Interpreter(args.model)
+  
+  # ##################################################
+  # matura23 - tflite Interpreter für edgetpu models
+  # ##################################################
+  from pycoral.utils import edgetpu
+  model = args.model
+  interpreter = None
+  # wir instanzieren einen tflite Interpreter für edgetpu Models
+  # falls im Pfad oder im Namen des Models der String "edgetpu" 
+  # gefunden wird 
+  if ("edgetpu" in model):
+    try:
+        # wir verwenden hier die oben definierten globalen Variablen 
+        # damit die Werte auch ausserhalb dieser Funktion zugewiesen
+        # sind
+        global device
+        global delegate
+
+        edgtpuInterpreter = edgetpu.make_interpreter(model, device=device, delegate=delegate)
+        if delegate is None and len(edgtpuInterpreter._delegates) > 0:
+          delegate = edgtpuInterpreter._delegates[0]
+        #interpreter.allocate_tensors() # allocate_tensors() wird weiter unten aufgerufen
+        interpreter = edgtpuInterpreter
+
+    except Exception as ex:
+      print ("error creating delegate for edgetpu", ex)
+
+  else:
+    # falls nicht edgetpu, instanzieren wir einen "normalen" 
+    # tflite Interpreter
+    interpreter = Interpreter(model)
+  # ##################################################
+
+  #interpreter = Interpreter(args.model)
   interpreter.allocate_tensors()
   _, input_height, input_width, _ = interpreter.get_input_details()[0]['shape']
 
@@ -236,7 +301,7 @@ def main():
 
     if len(image) != 0:
       start_time = time.monotonic()
-      results = __detect_objects(interpreter, image,args.threshold)
+      results = __detect_objects(interpreter, image,args.threshold, args.model)
       elapsed_ms = (time.monotonic() - start_time) * 1000
       # print(results)
 
